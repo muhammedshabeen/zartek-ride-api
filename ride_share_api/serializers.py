@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import *
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
 
@@ -15,9 +16,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         
         if not attrs.get('name'):
             raise serializers.ValidationError({"name": "Name is required."})
-
-        if not attrs.get('email'):
-            raise serializers.ValidationError({"email": "Email is required."})
 
         if not attrs.get('phone_number'):
             raise serializers.ValidationError({"phone_number": "Phone number is required."})

@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'ride_share_api',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +72,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
+ASGI_APPLICATION = 'core.asgi.application'
 
 
 # Database
@@ -141,4 +144,9 @@ REST_FRAMEWORK = {
     ],
 }
 
-GOOGLE_MAPS_API_KEY = 'AIzaSyB7oGM0wlQOvC-HuX9pRI3mqbXyR04SxXY'
+# GOOGLE_MAPS_API_KEY = 'AIzaSyB7oGM0wlQOvC-HuX9pRI3mqbXyR04SxXY'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}

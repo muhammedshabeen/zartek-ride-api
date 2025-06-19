@@ -4,6 +4,8 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'rides', RideViewSet, basename='ride')
+router.register(r'accept-ride', RideAcceptanceViewSet, basename='accept-ride')
+router.register(r'view-ride', RideViewSetUser, basename='view-ride')
 
 urlpatterns = [
     path('', include(router.urls)),
