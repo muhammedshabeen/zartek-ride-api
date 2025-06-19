@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+*.log
+
+# Virtualenv
+venv/
+ENV/
+env/
+.venv/
+
+# Django
+*.sqlite3
+db.sqlite3
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.pot
+*.mo
+*.pyc
+*.pyo
+*.pyd
+*.log
+media/
+staticfiles/
+static_root/
+local_settings.py
+
+# Migrations
+**/migrations/
+!**/migrations/__init__.py
+
+# Ignore all migration files except __init__.py
+**/migrations/*.py
+!**/migrations/__init__.py
+**/migrations/*.pyc
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# dotenv
+.env
+.env.*
+
+# coverage reports
+htmlcov/
+.coverage
+.tox/
+.nox/
+
+# Test outputs
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+*.log
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pipenv
+Pipfile.lock
+
+# docker
+*.pid
