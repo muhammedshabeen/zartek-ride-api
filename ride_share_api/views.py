@@ -2,11 +2,12 @@
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
 from core.utils import haversine
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import action
 
 #Local Imports
 from .models import *
@@ -19,7 +20,7 @@ class LoginApiView(APIView):
         if serializer.is_valid():
             user = authenticate(username=serializer.validated_data['username'], password=serializer.validated_data['password'])
             if user is not None:
-                refresh = RefreshToken.for_user(user)
+                token, created = Token.objects.get_or_create(user=user)
                 user_serializer = UserRegistrationSerializer(user)
                 latitude = request.data.get('latitude', None)  
                 longitude = request.data.get('longitude', None)
@@ -30,7 +31,7 @@ class LoginApiView(APIView):
                 return Response({
                     "status": True,
                     "message": 'Logged in successfully.',
-                    "token": str(refresh.access_token),
+                    "token": token.key,
                     "user_details": user_serializer.data,
                 }, status=status.HTTP_200_OK)
             else:
@@ -44,13 +45,16 @@ class LogoutView(APIView):
 
     def post(self, request):
         try:
-            refresh_token = request.data.get("refresh")
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response({"status": True, "message": "Logged out successfully."}, status=status.HTTP_205_RESET_CONTENT)
-
-        except TokenError:
-            return Response({"status": False, "message": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
+            request.user.auth_token.delete()
+            return Response({
+                "status": True,
+                "message": "Logged out successfully."
+            }, status=status.HTTP_200_OK)
+        except:
+            return Response({
+                "status": False,
+                "message": "Something went wrong during logout."
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -60,11 +64,11 @@ class RegistrationApiView(APIView):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            refresh = RefreshToken.for_user(user)
+            token, created = Token.objects.get_or_create(user=user)
             return Response({
                 'status': True,
                 'message': 'User created successfully',
-                "token": str(refresh.access_token),
+                "token": token.key,
                 "user_details": {
                     "id": user.id,
                     "username": user.username,
@@ -195,3 +199,27 @@ class RideViewSet(viewsets.ModelViewSet):
 
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    
+    @action(detail=True, methods=['post'], url_path='update-status')
+    def update_status(self, request, pk=None):
+        ride = self.get_object()
+        user = request.user
+        new_status = request.data.get('status')
+
+        valid_statuses = ['STARTED', 'COMPLETED', 'CANCELLED']
+
+        if new_status not in valid_statuses:
+            return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Only the assigned driver or admin can update status
+        if ride.driver != user:
+            return Response({'error': 'Not authorized to update this ride'}, status=status.HTTP_403_FORBIDDEN)
+
+        ride.status = new_status
+        ride.save()
+
+        return Response({
+            'message': f'Ride status updated to {new_status}',
+            'ride': RideSerializer(ride).data
+        }, status=status.HTTP_200_OK)
