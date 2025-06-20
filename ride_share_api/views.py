@@ -194,6 +194,38 @@ class RideViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
+
+    @action(detail=True, methods=['post'], url_path='match-driver')
+    def match_driver(self, request, pk=None):
+        ride = self.get_object()
+        user = request.user
+
+        if user.role != '2':
+            return Response({
+                'status': False,
+                'message': 'Only drivers can be assigned to rides.'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        if ride.driver:
+            return Response({
+                'status': False,
+                'message': 'Ride already has a driver.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+        ride.driver = user
+        ride.status = 'REQUESTED'
+        ride.save()
+
+        return Response({
+            'status': True,
+            'message': f'Driver {user.username} has been assigned to ride {ride.id}.',
+            'ride': RideSerializer(ride).data
+        }, status=status.HTTP_200_OK)
+
+
+
+
     
     @action(detail=True, methods=['post'], url_path='update-status')
     def update_status(self, request, pk=None):
