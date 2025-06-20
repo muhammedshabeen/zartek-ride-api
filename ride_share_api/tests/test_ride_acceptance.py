@@ -21,7 +21,7 @@ class RideAcceptanceTest(APITestCase):
             dropoff_location='B',
             status='REQUESTED'
         )
-        self.accept_url = reverse('accept-ride-list')
+        self.accept_url = reverse('ride-accept-ride', kwargs={'pk': self.ride.id})
 
     def test_accept_ride_success(self):
         token = Token.objects.get_or_create(user=self.driver)[0]
@@ -34,9 +34,9 @@ class RideAcceptanceTest(APITestCase):
     def test_accept_ride_not_found(self):
         token = Token.objects.get_or_create(user=self.driver)[0]
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = self.client.post(self.accept_url, {'ride_id': 9999})
+        invalid_url = reverse('ride-accept-ride', kwargs={'pk': 9999})
+        response = self.client.post(invalid_url)
         self.assertEqual(response.status_code, 404)
-        self.assertFalse(response.data['status'])
 
     def test_accept_ride_already_accepted(self):
         self.ride.driver_accepted = True
@@ -45,7 +45,7 @@ class RideAcceptanceTest(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
         response = self.client.post(self.accept_url, {'ride_id': self.ride.id})
         self.assertEqual(response.status_code, 400)
-        self.assertIn('Ride already has a accepted', response.data['message'])
+        self.assertIn('Ride already accepted', response.data['message'])
 
     def test_accept_ride_by_unauthorized_user(self):
         other_driver = User.objects.create_user(username='driver2', password='testpass', role='2')

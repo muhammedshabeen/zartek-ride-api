@@ -17,34 +17,27 @@ class RideViewSetUserTest(APITestCase):
         self.token_rider = Token.objects.create(user=self.rider)
         self.token_driver = Token.objects.create(user=self.driver)
 
-        self.url = reverse('view-ride-list')
+        self.url = reverse('ride-get-user-rides')
 
     def test_rider_ride_list_success(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_rider.key)
-        response = self.client.get(self.url + '?type=rider')
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.data['status'])
         self.assertEqual(response.data['count'], 2)
 
     def test_driver_ride_list_success(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_driver.key)
-        response = self.client.get(self.url + '?type=driver')
+        response = self.client.get(self.url)  
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.data['status'])
         self.assertEqual(response.data['count'], 1)
-
-    def test_missing_type_query_param(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_rider.key)
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 400)
-        self.assertFalse(response.data['status'])
-        self.assertIn("Please pass a valid 'type'", response.data['message'])
 
     def test_no_rides_returned(self):
         new_user = User.objects.create_user(username='empty_user', password='pass', role='1')
         token = Token.objects.create(user=new_user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
-        response = self.client.get(self.url + '?type=rider')
+        response = self.client.get(self.url)  
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.data['status'])
         self.assertEqual(response.data['count'], 0)

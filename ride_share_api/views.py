@@ -156,11 +156,7 @@ class RideViewSet(viewsets.ModelViewSet):
         if not rider_lat or not rider_lng:
             return  
 
-        drivers = CustomUser.objects.filter(
-            role='2',  
-            latitude__isnull=False,
-            longitude__isnull=False
-        )
+        drivers = CustomUser.objects.filter(role='2',latitude__isnull=False,longitude__isnull=False)
         print("DRIVER",drivers)
 
         if not drivers:
@@ -193,6 +189,36 @@ class RideViewSet(viewsets.ModelViewSet):
 
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    
+    @action(detail=True, methods=['post'], url_path='accept')
+    def accept_ride(self, request, pk=None):
+        ride = self.get_object()
+
+        if ride.status != 'REQUESTED':
+            return Response({'status': False, 'message': 'Ride is not in requested state'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if ride.driver_accepted:
+            return Response({'status': False, 'message': 'Ride already accepted'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if ride.driver != request.user:
+            return Response({'status': False, 'message': 'You are not authorized to accept this ride'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Accept the ride
+        ride.status = 'STARTED'
+        ride.driver_accepted = True
+        ride.save()
+
+        rider_name = ride.rider.get_full_name() if ride.rider else 'Unknown'
+
+        return Response({
+            'status': True,
+            'message': f"You have accepted the ride {ride.id}.\n"
+                       f"Rider: {rider_name}\n"
+                       f"Pickup: {ride.pickup_location}\n"
+                       f"Dropoff: {ride.dropoff_location}",
+            'ride': RideSerializer(ride).data
+        }, status=status.HTTP_200_OK)
     
 
     @action(detail=True, methods=['post'], url_path='match-driver')
@@ -249,67 +275,31 @@ class RideViewSet(viewsets.ModelViewSet):
             'ride': RideSerializer(ride).data
         }, status=status.HTTP_200_OK)
     
-
-class RideAcceptanceViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        ride_id = request.data.get('ride_id')
-        ride = Ride.objects.filter(id=ride_id, status='REQUESTED').first()
-
-        if not ride:
-            return Response({'status':False,'message': 'Ride not found or not in requested state'}, status=status.HTTP_404_NOT_FOUND)
-
-        if ride.driver_accepted:
-            return Response({'message': 'Ride already has a accepted'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if ride.driver == request.user:
-            ride.status = 'STARTED'
-            ride.driver_accepted = True
-            ride.save()
-        else:
-            return Response({'status':False,'message': 'You are not authorized to accept this ride'}, status=status.HTTP_403_FORBIDDEN)
-        
-        rider_name = ride.rider.get_full_name() if ride.rider else 'Unknown'
-        pickup = ride.pickup_location
-        dropoff = ride.dropoff_location
-        return Response({
-            'status':True,
-            'message':  f"You have accepted the ride {ride_id}.\n"
-                f"Rider: {rider_name}\n"
-                f"Pickup: {pickup}\n"
-                f"Dropoff: {dropoff}",
-            'ride': RideSerializer(ride).data
-        }, status=status.HTTP_200_OK)
     
-
-class RideViewSetUser(viewsets.ModelViewSet):
-    serializer_class = RideSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        role = self.request.query_params.get('type')  
-
-        if role == 'driver':
-            return Ride.objects.filter(driver=user)
-        elif role == 'rider':
-            return Ride.objects.filter(rider=user)
-        else:
-            return Ride.objects.none()
-
-    def list(self, request, *args, **kwargs):
-        role = self.request.query_params.get('type')
-        if role not in ['driver', 'rider']:
+    @action(detail=False, methods=['get'], url_path='my-rides')
+    def get_user_rides(self, request):
+        user = request.user
+        if not user:
             return Response({
                 'status': False,
-                'message': "Please pass a valid 'type' query param (driver or rider)."
+                'message': "Authentication Failed"
             }, status=status.HTTP_400_BAD_REQUEST)
-
-        queryset = self.get_queryset()
+        queryset = Ride.objects.all()
+        if user.role == '1':
+            queryset = queryset.filter(rider=user)
+        elif user.role == '2':
+            queryset = queryset.filter(driver=user)
+        else:
+            return Response({
+                'status': False,
+                'message': "User role mismatch"
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
         serializer = self.get_serializer(queryset, many=True)
         return Response({
             'status': True,
             'count': queryset.count(),
             'rides': serializer.data
         })
+
+    
