@@ -94,8 +94,12 @@ python manage.py test
 ```
 
 Test Cases:
+- Login
+- Register
+- Logout
 - Ride acceptance logic
 - Ride matching logic
+- Real time location update
 - User-specific ride views
 
 ---
