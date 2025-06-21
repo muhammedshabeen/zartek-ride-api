@@ -21,7 +21,7 @@ A backend REST API for ride-sharing functionality built using Django and Django 
 - Python 3.10+
 - Django 4.x
 - Django REST Framework
-- SQLite (Default, can be changed)
+- Postgres
 - Token Authentication (DRF built-in)
 - Haversine formula for geolocation
 - `unittest` for test cases
