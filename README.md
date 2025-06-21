@@ -125,7 +125,7 @@ ride-share-api/
 
 You can test all the available endpoints using Postman:
 
-👉 [View Postman Collection](https://.postman.co/workspace/My-Workspace~7a70bfe5-c489-404a-852e-f90d378edfca/collection/39130056-ebea1933-1b08-47d5-9931-ac655c706219?action=share&creator=39130056)
+👉 [View Postman Collection](https://web.postman.co/workspace/7a70bfe5-c489-404a-852e-f90d378edfca/collection/39130056-ebea1933-1b08-47d5-9931-ac655c706219?action=share&source=copy-link&creator=39130056)
 
 
 ---
