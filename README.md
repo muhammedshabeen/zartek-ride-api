@@ -143,7 +143,7 @@ You can connect to the WebSocket endpoint below to simulate or test real-time lo
   "latitude": 10.9715,
   "longitude": 10.5949
 }
-
+```
 
 ---
 
