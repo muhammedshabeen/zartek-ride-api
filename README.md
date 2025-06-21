@@ -131,6 +131,22 @@ You can test all the available endpoints using Postman:
 ---
 
 
+## 🌐 WebSocket Connection
+
+
+You can connect to the WebSocket endpoint below to simulate or test real-time location updates:
+- URL : ws://127.0.0.1:8000/ws/track/5/
+#### 📤 Message Format (JSON)
+```json
+{
+  "type": "send_location",
+  "latitude": 10.9715,
+  "longitude": 10.5949
+}
+
+
+---
+
 ## 🙋 Author
 
 **Muhammed Shabeen**  
